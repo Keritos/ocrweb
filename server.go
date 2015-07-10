@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,6 +9,14 @@ import (
 
 	"github.com/Keritos/tesseract"
 )
+
+var (
+	ocrpath string
+)
+
+func init() {
+	flag.StringVar(&ocrpath, "p", "", `path\to\tesseract.exe`)
+}
 
 type appHandler func(http.ResponseWriter, *http.Request) error
 
@@ -29,7 +38,13 @@ func cap2txt(w http.ResponseWriter, r *http.Request) error {
 }
 
 func main() {
-	tesseract.ExecutablePath = `d:\home\site\wwwroot\ocr\Tesseract-OCR\tesseract.exe`
+	flag.Parse()
+
+	if ocrpath == "" {
+		panic("tesseract.exe path not found")
+	}
+
+	tesseract.ExecutablePath = ocrpath
 	http.Handle("/cap2txt", appHandler(cap2txt))
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) { log.Println("pong!!!") })
 	http.ListenAndServe(":"+os.Getenv("HTTP_PLATFORM_PORT"), nil)
